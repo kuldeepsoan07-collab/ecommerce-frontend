@@ -1,0 +1,225 @@
+// src/data/products.js
+
+export const categories = [
+  {
+    slug: "all",
+    name: "All Products",
+  },
+  {
+    slug: "fashion",
+    name: "Fashion",
+  },
+  {
+    slug: "electronics",
+    name: "Electronics",
+  },
+  {
+    slug: "laptops",
+    name: "Laptops",
+  },
+  {
+    slug: "watches",
+    name: "Watches",
+  },
+  {
+    slug: "bags",
+    name: "Bags",
+  },
+  {
+    slug: "headphones",
+    name: "Headphones",
+  },
+  {
+    slug: "home-living",
+    name: "Home & Living",
+  },
+  {
+    slug: "fitness",
+    name: "Fitness",
+  },
+];
+
+export const products = [
+  {
+    id: 1,
+    name: "Premium Classic Watch",
+    category: "watches",
+    price: 149,
+    originalPrice: 199,
+    discount: 25,
+    rating: 4.5,
+    reviews: 120,
+    image: "https://picsum.photos/seed/watch/600/700",
+    badge: "Sale",
+  },
+
+  {
+    id: 2,
+    name: "Wireless Headphones",
+    category: "headphones",
+    price: 89,
+    originalPrice: 119,
+    discount: 25,
+    rating: 4.7,
+    reviews: 230,
+    image: "https://picsum.photos/seed/headphones/600/700",
+    badge: "Popular",
+  },
+
+  {
+    id: 3,
+    name: "Premium Laptop",
+    category: "laptops",
+    price: 799,
+    originalPrice: 999,
+    discount: 20,
+    rating: 4.8,
+    reviews: 185,
+    image: "https://picsum.photos/seed/laptop/600/700",
+    badge: "Sale",
+  },
+
+  {
+    id: 4,
+    name: "Modern Backpack",
+    category: "bags",
+    price: 69,
+    originalPrice: 89,
+    discount: 22,
+    rating: 4.4,
+    reviews: 95,
+    image: "https://picsum.photos/seed/bag/600/700",
+    badge: "New",
+  },
+
+  {
+    id: 5,
+    name: "Smartphone Pro",
+    category: "electronics",
+    price: 599,
+    originalPrice: 699,
+    discount: 14,
+    rating: 4.6,
+    reviews: 310,
+    image: "https://picsum.photos/seed/phone/600/700",
+    badge: "Popular",
+  },
+
+  {
+    id: 6,
+    name: "Premium Casual Shirt",
+    category: "fashion",
+    price: 49,
+    originalPrice: 69,
+    discount: 29,
+    rating: 4.3,
+    reviews: 78,
+    image: "https://picsum.photos/seed/shirt/600/700",
+    badge: "Sale",
+  },
+
+  {
+    id: 7,
+    name: "Smart Fitness Watch",
+    category: "watches",
+    price: 129,
+    originalPrice: 169,
+    discount: 24,
+    rating: 4.6,
+    reviews: 156,
+    image: "https://picsum.photos/seed/smartwatch/600/700",
+    badge: "New",
+  },
+
+  {
+    id: 8,
+    name: "Premium Hoodie",
+    category: "fashion",
+    price: 59,
+    originalPrice: 79,
+    discount: 25,
+    rating: 4.5,
+    reviews: 92,
+    image: "https://picsum.photos/seed/hoodie/600/700",
+    badge: "Popular",
+  },
+
+  {
+    id: 9,
+    name: "Bluetooth Speaker",
+    category: "electronics",
+    price: 79,
+    originalPrice: 109,
+    discount: 28,
+    rating: 4.4,
+    reviews: 187,
+    image: "https://picsum.photos/seed/speaker/600/700",
+    badge: "Sale",
+  },
+
+  {
+    id: 10,
+    name: "Gaming Laptop",
+    category: "laptops",
+    price: 1199,
+    originalPrice: 1399,
+    discount: 14,
+    rating: 4.9,
+    reviews: 245,
+    image: "https://picsum.photos/seed/gaming-laptop/600/700",
+    badge: "Premium",
+  },
+
+  {
+    id: 11,
+    name: "Travel Backpack",
+    category: "bags",
+    price: 89,
+    originalPrice: 119,
+    discount: 25,
+    rating: 4.5,
+    reviews: 134,
+    image: "https://picsum.photos/seed/travel-bag/600/700",
+    badge: "New",
+  },
+
+  {
+    id: 12,
+    name: "Home Table Lamp",
+    category: "home-living",
+    price: 45,
+    originalPrice: 59,
+    discount: 24,
+    rating: 4.2,
+    reviews: 64,
+    image: "https://picsum.photos/seed/lamp/600/700",
+    badge: "Sale",
+  },
+
+  {
+    id: 13,
+    name: "Premium Earbuds",
+    category: "headphones",
+    price: 69,
+    originalPrice: 99,
+    discount: 30,
+    rating: 4.6,
+    reviews: 210,
+    image: "https://picsum.photos/seed/earbuds/600/700",
+    badge: "Popular",
+  },
+
+  {
+    id: 14,
+    name: "Training Dumbbells",
+    category: "fitness",
+    price: 99,
+    originalPrice: 129,
+    discount: 23,
+    rating: 4.4,
+    reviews: 76,
+    image: "https://picsum.photos/seed/fitness/600/700",
+    badge: "New",
+  },
+];
+
