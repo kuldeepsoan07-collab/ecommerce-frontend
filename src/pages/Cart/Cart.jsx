@@ -22,7 +22,6 @@ function Cart() {
     return (
       <main className="min-h-[70vh] bg-[#F8FAFC] px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-center rounded-3xl bg-white px-6 py-16 text-center shadow-sm">
-
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EFF6FF]">
             <ShoppingBag className="h-9 w-9 text-[#2563EB]" />
           </div>
@@ -43,7 +42,6 @@ function Cart() {
             <ArrowLeft className="h-4 w-4" />
             Continue Shopping
           </Link>
-
         </div>
       </main>
     );
@@ -54,7 +52,6 @@ function Cart() {
 
   return (
     <main className="bg-[#F8FAFC] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-
       <div className="mx-auto max-w-7xl">
 
         {/* Header */}
@@ -77,110 +74,123 @@ function Cart() {
 
           {/* Cart Products */}
           <div className="space-y-4">
+            {cart.map((item) => {
+              // Backend product ke liye _id
+              // Local product ke liye id
+              const productId = item._id || item.id;
 
-            {cart.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center"
-              >
-
-                {/* Image */}
-                <Link
-                  to={`/product/${item.id}`}
-                  className="shrink-0"
+              return (
+                <div
+                  key={productId}
+                  className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center"
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-28 w-full rounded-xl object-cover sm:h-28 sm:w-28"
-                  />
-                </Link>
 
-                {/* Product Info */}
-                <div className="flex flex-1 flex-col">
-
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
-                    {item.category}
-                  </span>
-
+                  {/* Image */}
                   <Link
-                    to={`/product/${item.id}`}
-                    className="mt-1 text-base font-semibold text-[#0F172A] transition hover:text-[#2563EB]"
+                    to={`/product/${productId}`}
+                    className="shrink-0"
                   >
-                    {item.name}
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-28 w-full rounded-xl object-cover sm:h-28 sm:w-28"
+                    />
                   </Link>
 
-                  <p className="mt-2 text-lg font-bold text-[#0F172A]">
-                    ${item.price.toFixed(2)}
-                  </p>
+                  {/* Product Info */}
+                  <div className="flex flex-1 flex-col">
 
-                  {/* Quantity */}
-                  <div className="mt-4 flex items-center justify-between gap-4">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
+                      {item.category}
+                    </span>
 
-                    <div className="inline-flex items-center rounded-full border border-slate-200">
+                    <Link
+                      to={`/product/${productId}`}
+                      className="mt-1 text-base font-semibold text-[#0F172A] transition hover:text-[#2563EB]"
+                    >
+                      {item.name}
+                    </Link>
 
+                    <p className="mt-2 text-lg font-bold text-[#0F172A]">
+                      ${Number(item.price).toFixed(2)}
+                    </p>
+
+                    {/* Quantity + Remove */}
+                    <div className="mt-4 flex items-center justify-between gap-4">
+
+                      {/* Quantity Controls */}
+                      <div className="inline-flex items-center rounded-full border border-slate-200">
+
+                        {/* Minus */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateQuantity(
+                              productId,
+                              item.quantity - 1
+                            )
+                          }
+                          disabled={item.quantity <= 1}
+                          aria-label="Decrease quantity"
+                          className="flex h-9 w-9 items-center justify-center rounded-l-full text-[#0F172A] transition hover:bg-[#EFF6FF] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+
+                        {/* Quantity */}
+                        <span className="flex h-9 w-10 items-center justify-center border-x border-slate-200 text-sm font-semibold text-[#0F172A]">
+                          {item.quantity}
+                        </span>
+
+                        {/* Plus */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateQuantity(
+                              productId,
+                              item.quantity + 1
+                            )
+                          }
+                          aria-label="Increase quantity"
+                          className="flex h-9 w-9 items-center justify-center rounded-r-full text-[#0F172A] transition hover:bg-[#EFF6FF]"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+
+                      </div>
+
+                      {/* Remove */}
                       <button
                         type="button"
                         onClick={() =>
-                          updateQuantity(
-                            item.id,
-                            item.quantity - 1
-                          )
+                          removeFromCart(productId)
                         }
-                        disabled={item.quantity <= 1}
-                        className="flex h-9 w-9 items-center justify-center rounded-l-full text-[#0F172A] transition hover:bg-[#EFF6FF] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-red-500 transition hover:text-red-600"
                       >
-                        <Minus className="h-4 w-4" />
-                      </button>
-
-                      <span className="flex h-9 w-10 items-center justify-center border-x border-slate-200 text-sm font-semibold text-[#0F172A]">
-                        {item.quantity}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateQuantity(
-                            item.id,
-                            item.quantity + 1
-                          )
-                        }
-                        className="flex h-9 w-9 items-center justify-center rounded-r-full text-[#0F172A] transition hover:bg-[#EFF6FF]"
-                      >
-                        <Plus className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
+                        Remove
                       </button>
 
                     </div>
-
-                    {/* Remove */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        removeFromCart(item.id)
-                      }
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-red-500 transition hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Remove
-                    </button>
-
                   </div>
+
+                  {/* Item Total */}
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs text-[#64748B]">
+                      Item Total
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold text-[#0F172A]">
+                      $
+                      {(
+                        Number(item.price) * item.quantity
+                      ).toFixed(2)}
+                    </p>
+                  </div>
+
                 </div>
-
-                {/* Item Total */}
-                <div className="text-left sm:text-right">
-                  <p className="text-xs text-[#64748B]">
-                    Item Total
-                  </p>
-
-                  <p className="mt-1 text-lg font-bold text-[#0F172A]">
-                    $
-                    {(item.price * item.quantity).toFixed(2)}
-                  </p>
-                </div>
-
-              </div>
-            ))}
+              );
+            })}
 
             {/* Continue Shopping */}
             <Link
@@ -190,7 +200,6 @@ function Cart() {
               <ArrowLeft className="h-4 w-4" />
               Continue Shopping
             </Link>
-
           </div>
 
           {/* Order Summary */}
@@ -238,7 +247,6 @@ function Cart() {
                   ${total.toFixed(2)}
                 </span>
               </div>
-
             </div>
 
             {/* Checkout */}
@@ -265,10 +273,8 @@ function Cart() {
             )}
 
           </div>
-
         </div>
       </div>
-
     </main>
   );
 }

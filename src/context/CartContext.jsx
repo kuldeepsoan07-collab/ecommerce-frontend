@@ -1,22 +1,44 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
+  // LocalStorage se cart load karo
+  const [cart, setCart] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem("cart");
 
-  const addToCart = (product, quantity = 1) => {
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error("Failed to load cart:", error);
+      return [];
+    }
+  });
+
+  // Cart change hone par LocalStorage me save karo
+  useEffect(() => {
+    try {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    } catch (error) {
+      console.error("Failed to save cart:", error);
+    }
+  }, [cart]);
+
+  // Add product
+  const addToCart = (product) => {
     setCart((prevCart) => {
-      const existingProduct = prevCart.find(
-        (item) => item.id === product.id
+      const productId = product._id || product.id;
+
+      const existingItem = prevCart.find(
+        (item) => (item._id || item.id) === productId
       );
 
-      if (existingProduct) {
+      if (existingItem) {
         return prevCart.map((item) =>
-          item.id === product.id
+          (item._id || item.id) === productId
             ? {
                 ...item,
-                quantity: item.quantity + quantity,
+                quantity: item.quantity + 1,
               }
             : item
         );
@@ -26,41 +48,55 @@ export function CartProvider({ children }) {
         ...prevCart,
         {
           ...product,
-          quantity,
+          quantity: 1,
         },
       ];
     });
   };
 
-  const removeFromCart = (id) => {
+  // Remove product
+  const removeFromCart = (productId) => {
     setCart((prevCart) =>
-      prevCart.filter((item) => item.id !== id)
+      prevCart.filter(
+        (item) => (item._id || item.id) !== productId
+      )
     );
   };
 
-  const updateQuantity = (id, quantity) => {
-    if (quantity < 1) return;
+  // Update quantity
+  const updateQuantity = (productId, quantity) => {
+    if (quantity < 1) {
+      removeFromCart(productId);
+      return;
+    }
 
     setCart((prevCart) =>
       prevCart.map((item) =>
-        item.id === id
-          ? { ...item, quantity }
+        (item._id || item.id) === productId
+          ? {
+              ...item,
+              quantity,
+            }
           : item
       )
     );
   };
 
+  // Clear cart
   const clearCart = () => {
     setCart([]);
   };
 
-  const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
+  // Total price
+  const cartTotal = cart.reduce(
+    (total, item) =>
+      total + Number(item.price) * item.quantity,
     0
   );
 
-  const cartTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+  // Total quantity
+  const cartCount = cart.reduce(
+    (total, item) => total + item.quantity,
     0
   );
 
@@ -72,8 +108,8 @@ export function CartProvider({ children }) {
         removeFromCart,
         updateQuantity,
         clearCart,
-        cartCount,
         cartTotal,
+        cartCount,
       }}
     >
       {children}

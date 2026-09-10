@@ -19,13 +19,16 @@ import Account from "./pages/Account/Account.jsx";
 
 import { CartProvider } from "./context/CartContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
-
+import AdminProducts from "./pages/Admin/AdminProducts";
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
 import OrderSuccess from "./pages/OrderSuccess/OrderSuccess.jsx";
-
+import AdminRoute from "./components/AdminRoute";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import MyOrders from "./pages/MyOrders";
+import AdminOrders from "./pages/Admin/AdminOrders";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -77,7 +80,7 @@ const router = createBrowserRouter([
         element: <Checkout />,
       }, 
       {
-        path:"odersuccess",
+        path: "odersuccess",
         element:<OrderSuccess />
       }, 
 
@@ -99,7 +102,35 @@ const router = createBrowserRouter([
 { path: 
   "account", 
   element: <Account /> },
-    ],
+
+
+{
+  path: "admin",
+  element: <AdminRoute />,
+  children: [
+    {
+      index: true,
+      element: <AdminDashboard />,
+    },
+    {
+      path: "products",
+      element: <AdminProducts />,
+    },
+
+    {
+  path: "orders",
+  element: <AdminOrders />,
+},
+  ],
+},
+   
+{
+  path: "my-orders",
+  element: <MyOrders />,
+},
+
+
+],
   },
 ]);
 

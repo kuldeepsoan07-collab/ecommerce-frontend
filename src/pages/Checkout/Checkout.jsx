@@ -10,12 +10,21 @@ import {
 
 import { useCart } from "../../context/CartContext";
 
+import {
+  createPaymentOrder,
+  verifyPayment,
+} from "../../api/paymentApi";
+
+import { createOrder } from "../../api/orderApi";
+
 function Checkout() {
   const navigate = useNavigate();
 
   const { cart, cartTotal, clearCart } = useCart();
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -27,8 +36,6 @@ function Checkout() {
     state: "",
     pincode: "",
   });
-
-  const [orderPlaced, setOrderPlaced] = useState(false);
 
   const shipping = cartTotal >= 100 ? 0 : 10;
   const total = cartTotal + shipping;
@@ -42,24 +49,219 @@ function Checkout() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // =========================
+  // Place Order
+  // =========================
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (cart.length === 0) {
       return;
     }
 
-    setOrderPlaced(true);
+    // =========================
+    // COD
+    // =========================
 
-    // Cart clear
-    clearCart();
+    if (paymentMethod === "cod") {
+      try {
+        setLoading(true);
+
+        const orderData = {
+          items: cart.map((item) => ({
+            product: item._id || item.id,
+            quantity: item.quantity,
+          })),
+
+          shippingAddress: {
+            fullName: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+          },
+
+          paymentMethod: "COD",
+        };
+
+        console.log("Sending order:", orderData);
+
+        const data = await createOrder(orderData);
+
+        console.log("Order created successfully:", data);
+
+        setOrderPlaced(true);
+        clearCart();
+      } catch (error) {
+        console.error("Place order error:", error);
+
+        alert(
+          error.message ||
+            "Failed to place order. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
+    // =========================
+    // Razorpay
+    // =========================
+
+    try {
+      setLoading(true);
+
+      // Create Razorpay order from backend
+      const data = await createPaymentOrder(total);
+
+      if (!data?.order?.id) {
+        throw new Error("Razorpay order was not created");
+      }
+
+      if (!window.Razorpay) {
+        throw new Error(
+          "Razorpay SDK failed to load. Please refresh the page."
+        );
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+
+        amount: data.order.amount,
+
+        currency: data.order.currency || "INR",
+
+        name: "Your E-Commerce",
+
+        description: "E-Commerce Purchase",
+
+        order_id: data.order.id,
+
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone,
+        },
+
+        notes: {
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+        },
+
+        theme: {
+          color: "#2563EB",
+        },
+
+        // =========================
+        // Payment Success
+        // =========================
+
+        handler: async function (response) {
+          try {
+            setLoading(true);
+
+            const verification = await verifyPayment({
+              razorpay_order_id:
+                response.razorpay_order_id,
+
+              razorpay_payment_id:
+                response.razorpay_payment_id,
+
+              razorpay_signature:
+                response.razorpay_signature,
+            });
+
+            if (verification.success) {
+              setOrderPlaced(true);
+              clearCart();
+            } else {
+              alert(
+                "Payment verification failed."
+              );
+            }
+          } catch (error) {
+            console.error(
+              "Payment verification error:",
+              error
+            );
+
+            alert(
+              error.message ||
+                "Payment verification failed. Please contact support."
+            );
+          } finally {
+            setLoading(false);
+          }
+        },
+
+        // =========================
+        // Razorpay Closed
+        // =========================
+
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+
+            console.log(
+              "Razorpay payment popup closed"
+            );
+          },
+        },
+      };
+
+      const razorpay =
+        new window.Razorpay(options);
+
+      // =========================
+      // Payment Failed
+      // =========================
+
+      razorpay.on(
+        "payment.failed",
+        function (response) {
+          console.error(
+            "Payment failed:",
+            response.error
+          );
+
+          setLoading(false);
+
+          alert(
+            response.error?.description ||
+              "Payment failed. Please try again."
+          );
+        }
+      );
+
+      razorpay.open();
+    } catch (error) {
+      console.error(
+        "Razorpay payment error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Unable to start payment. Please try again."
+      );
+
+      setLoading(false);
+    }
   };
 
+  // =========================
   // Order Success
+  // =========================
+
   if (orderPlaced) {
     return (
       <main className="min-h-[70vh] bg-[#F8FAFC] px-4 py-16 sm:px-6 lg:px-8">
-
         <div className="mx-auto max-w-2xl rounded-3xl bg-white px-6 py-14 text-center shadow-sm">
 
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
@@ -71,8 +273,8 @@ function Checkout() {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-[#64748B]">
-            Thank you for your order. Your order has been successfully
-            placed.
+            Thank you for your order. Your order has been
+            successfully placed.
           </p>
 
           <div className="mt-6 rounded-2xl bg-[#EFF6FF] p-5">
@@ -81,7 +283,7 @@ function Checkout() {
             </p>
 
             <p className="mt-1 text-2xl font-bold text-[#2563EB]">
-              ${total.toFixed(2)}
+              ₹{total.toFixed(2)}
             </p>
           </div>
 
@@ -98,11 +300,13 @@ function Checkout() {
     );
   }
 
-  // Empty cart
+  // =========================
+  // Empty Cart
+  // =========================
+
   if (cart.length === 0) {
     return (
       <main className="min-h-[70vh] bg-[#F8FAFC] px-4 py-16 sm:px-6 lg:px-8">
-
         <div className="mx-auto max-w-2xl rounded-3xl bg-white px-6 py-14 text-center shadow-sm">
 
           <h1 className="text-3xl font-bold text-[#0F172A]">
@@ -132,6 +336,7 @@ function Checkout() {
       <div className="mx-auto max-w-7xl">
 
         {/* Header */}
+
         <div className="mb-8">
 
           <Link
@@ -156,10 +361,14 @@ function Checkout() {
 
           <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
 
-            {/* Left */}
+            {/* =========================
+                Left
+            ========================= */}
+
             <div className="space-y-6">
 
               {/* Customer Information */}
+
               <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 <div className="flex items-center gap-3">
@@ -225,6 +434,7 @@ function Checkout() {
               </section>
 
               {/* Shipping Address */}
+
               <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 <div className="flex items-center gap-3">
@@ -292,6 +502,7 @@ function Checkout() {
               </section>
 
               {/* Payment */}
+
               <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 <div className="flex items-center gap-3">
@@ -315,6 +526,7 @@ function Checkout() {
                 <div className="mt-6 space-y-3">
 
                   {/* COD */}
+
                   <PaymentOption
                     value="cod"
                     selected={paymentMethod === "cod"}
@@ -324,21 +536,23 @@ function Checkout() {
                   />
 
                   {/* UPI */}
+
                   <PaymentOption
                     value="upi"
                     selected={paymentMethod === "upi"}
                     onChange={setPaymentMethod}
                     title="UPI"
-                    description="Pay using UPI"
+                    description="Pay using Razorpay"
                   />
 
                   {/* Card */}
+
                   <PaymentOption
                     value="card"
                     selected={paymentMethod === "card"}
                     onChange={setPaymentMethod}
                     title="Credit / Debit Card"
-                    description="Secure card payment"
+                    description="Pay securely using Razorpay"
                   />
 
                 </div>
@@ -347,7 +561,10 @@ function Checkout() {
 
             </div>
 
-            {/* Right - Order Summary */}
+            {/* =========================
+                Right - Order Summary
+            ========================= */}
+
             <div className="h-fit lg:sticky lg:top-24">
 
               <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -357,11 +574,12 @@ function Checkout() {
                 </h2>
 
                 {/* Products */}
+
                 <div className="mt-6 space-y-4">
 
                   {cart.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.id || item._id}
                       className="flex gap-3"
                     >
 
@@ -384,7 +602,11 @@ function Checkout() {
                       </div>
 
                       <p className="text-sm font-bold text-[#0F172A]">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ₹
+                        {(
+                          item.price *
+                          item.quantity
+                        ).toFixed(2)}
                       </p>
 
                     </div>
@@ -395,6 +617,7 @@ function Checkout() {
                 <div className="my-6 h-px bg-slate-200" />
 
                 {/* Subtotal */}
+
                 <div className="flex justify-between text-sm">
 
                   <span className="text-[#64748B]">
@@ -402,12 +625,13 @@ function Checkout() {
                   </span>
 
                   <span className="font-semibold text-[#0F172A]">
-                    ${cartTotal.toFixed(2)}
+                    ₹{cartTotal.toFixed(2)}
                   </span>
 
                 </div>
 
                 {/* Shipping */}
+
                 <div className="mt-4 flex justify-between text-sm">
 
                   <span className="text-[#64748B]">
@@ -417,7 +641,7 @@ function Checkout() {
                   <span className="font-semibold text-[#0F172A]">
                     {shipping === 0
                       ? "FREE"
-                      : `$${shipping.toFixed(2)}`}
+                      : `₹${shipping.toFixed(2)}`}
                   </span>
 
                 </div>
@@ -425,6 +649,7 @@ function Checkout() {
                 <div className="my-5 h-px bg-slate-200" />
 
                 {/* Total */}
+
                 <div className="flex items-center justify-between">
 
                   <span className="font-semibold text-[#0F172A]">
@@ -432,18 +657,27 @@ function Checkout() {
                   </span>
 
                   <span className="text-2xl font-bold text-[#2563EB]">
-                    ${total.toFixed(2)}
+                    ₹{total.toFixed(2)}
                   </span>
 
                 </div>
 
                 {/* Place Order */}
+
                 <button
                   type="submit"
-                  className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-[#2563EB] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] active:scale-[0.98]"
+                  disabled={loading}
+                  className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-[#2563EB] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
+
                   <ShieldCheck className="h-5 w-5" />
-                  Place Order
+
+                  {loading
+                    ? "Processing..."
+                    : paymentMethod === "cod"
+                    ? "Place Order"
+                    : "Pay with Razorpay"}
+
                 </button>
 
                 <p className="mt-4 text-center text-xs leading-5 text-[#64748B]">
@@ -464,7 +698,10 @@ function Checkout() {
   );
 }
 
-/* Input Component */
+{/* =========================
+   Input Component
+========================= */}
+
 function Input({
   label,
   name,
@@ -499,7 +736,10 @@ function Input({
   );
 }
 
-/* Payment Option */
+{/* =========================
+   Payment Option
+========================= */}
+
 function PaymentOption({
   value,
   selected,
@@ -526,6 +766,7 @@ function PaymentOption({
       />
 
       <div>
+
         <p className="text-sm font-semibold text-[#0F172A]">
           {title}
         </p>
@@ -533,6 +774,7 @@ function PaymentOption({
         <p className="mt-1 text-xs text-[#64748B]">
           {description}
         </p>
+
       </div>
 
     </label>

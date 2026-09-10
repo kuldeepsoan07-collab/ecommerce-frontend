@@ -1,20 +1,38 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Login
+  // Page refresh ke baad user restore
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error("Failed to restore user:", error);
+        localStorage.removeItem("user");
+      }
+    }
+
+    setLoading(false);
+  }, []);
+
   const login = (accessToken, userData) => {
     localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("user", JSON.stringify(userData));
+
     setUser(userData);
   };
 
-  // Logout
   const logout = () => {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+
     setUser(null);
   };
 
